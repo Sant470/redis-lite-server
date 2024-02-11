@@ -33,6 +33,9 @@ type expireInfo struct {
 	ttm time.Duration
 }
 
+// node information
+var replicaof bool
+
 // data store
 var dbstore = make(map[string]string)
 var mu sync.RWMutex
@@ -168,9 +171,11 @@ func getKeys() []string {
 }
 
 func getInfoDetails(cmds ...string) string {
-	var role string
+	role := "master"
 	if len(cmds) > 0 && cmds[0] == "replication" {
-		role = "master"
+		if replicaof {
+			role = "slave"
+		}
 		return fmt.Sprintf("%s:%s", "role", role)
 	}
 	return ""
@@ -274,9 +279,11 @@ func handleConn(conn net.Conn) {
 func main() {
 	var port int
 	flag.IntVar(&port, "port", 6379, "port for different nodes of cluster")
+	flag.BoolVar(&replicaof, "replicaof", false, "identify the node as master or replica")
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
+	fmt.Println("replicaOf: ", replicaof)
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
