@@ -234,6 +234,7 @@ func handleConn(conn net.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println("raw: ", string(barr))
 		in := input{raw: barr}
 		in.parse()
 		fmt.Println("cmds: ", in.cmds)
