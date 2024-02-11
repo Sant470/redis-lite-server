@@ -268,7 +268,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
-			fmt.Println("info: ", info)
+			fmt.Println("info details: ", info)
 			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
 			mustCopy(conn, strings.NewReader(resp))
 		default:
