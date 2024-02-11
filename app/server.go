@@ -167,6 +167,15 @@ func getKeys() []string {
 	return keys
 }
 
+func getInfoDetails(cmds ...string) string {
+	var role string
+	if len(cmds) > 0 && cmds[0] == "replication" {
+		role = "master"
+		return fmt.Sprintf("%s:%s", "role", role)
+	}
+	return ""
+}
+
 func decodeArray(r *bufio.Reader) ([]string, error) {
 	vbarr, err := validBytes(r)
 	if err != nil {
@@ -251,6 +260,10 @@ func handleConn(conn net.Conn) {
 		case "KEYS":
 			vals := getKeys()
 			resp := encodeArray(vals)
+			mustCopy(conn, strings.NewReader(resp))
+		case "INFO":
+			info := getInfoDetails(in.cmds[1:]...)
+			resp := encodeArray([]string{info})
 			mustCopy(conn, strings.NewReader(resp))
 		default:
 			mustCopy(conn, strings.NewReader("+PONG\r\n"))
