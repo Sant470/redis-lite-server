@@ -235,6 +235,7 @@ func handleConn(conn net.Conn) {
 		}
 		in := input{raw: barr}
 		in.parse()
+		fmt.Println("cmds: ", in.cmds)
 		switch strings.ToUpper(in.cmds[0]) {
 		// TODO: write handlers for each of the query
 		case "PING":
@@ -267,6 +268,7 @@ func handleConn(conn net.Conn) {
 			resp := encodeArray(vals)
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
+			fmt.Println("Got here", in.cmds[1])
 			info := getInfoDetails(in.cmds[1:]...)
 			fmt.Println("info details: ", info)
 			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
@@ -284,6 +286,7 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
+	fmt.Println("got here: ", replicaof)
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
@@ -302,6 +305,7 @@ func main() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
+			fmt.Println("error: ", err)
 			log.Println(err)
 			continue
 		}
