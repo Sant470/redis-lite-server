@@ -286,7 +286,6 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
-	fmt.Println("got here: ", replicaof)
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
