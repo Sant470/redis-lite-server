@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// passing the 6th stage
+// passing the 7th stage
 
 const (
 	Array = '*'
