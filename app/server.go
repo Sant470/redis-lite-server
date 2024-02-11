@@ -268,6 +268,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
+			fmt.Println("info: ", info)
 			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
 			mustCopy(conn, strings.NewReader(resp))
 		default:
@@ -283,7 +284,6 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
-	fmt.Println("replicaOf: ", replicaof)
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
