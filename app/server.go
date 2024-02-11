@@ -83,6 +83,7 @@ func get(key string) (string, bool) {
 
 func expireKeys(in <-chan expireInfo) {
 	for val := range in {
+		fmt.Println("dur: ", val.ttm)
 		tick := time.NewTicker(val.ttm)
 		<-tick.C
 		mu.Lock()
