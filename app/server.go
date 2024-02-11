@@ -270,7 +270,6 @@ func handleConn(conn net.Conn) {
 			resp := encodeArray(vals)
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
-			fmt.Println("Got here", in.cmds[1])
 			info := getInfoDetails(in.cmds[1:]...)
 			fmt.Println("info details: ", info)
 			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
