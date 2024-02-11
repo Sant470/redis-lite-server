@@ -210,6 +210,7 @@ func (i *input) parse() {
 	if err != nil {
 		log.Fatal("error reading 1st byte: ", err)
 	}
+	fmt.Println("b: ", string(b))
 	switch b {
 	case Array:
 		cmds, err := decodeArray(r)
@@ -304,7 +305,6 @@ func main() {
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("error: ", err)
 			log.Println(err)
 			continue
 		}
