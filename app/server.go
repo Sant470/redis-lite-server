@@ -16,8 +16,6 @@ import (
 	"time"
 )
 
-// passing the 13th stage
-
 const (
 	Array = '*'
 	Bulk  = '$'
