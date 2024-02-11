@@ -259,6 +259,8 @@ func handleConn(conn net.Conn) {
 }
 
 func main() {
+	var port int
+	flag.IntVar(&port, "port", 6379, "port for different nodes of cluster")
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
@@ -272,7 +274,7 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	l, err := net.Listen("tcp", "localhost:6379")
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", "localhost", port))
 	if err != nil {
 		log.Fatal(err)
 	}
