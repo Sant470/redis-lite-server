@@ -69,7 +69,7 @@ func set(args ...string) {
 				log.Print("invalid expire val: ", args[3])
 				return
 			}
-			expireChannel <- expireInfo{args[0], time.Duration(1000 * d)}
+			expireChannel <- expireInfo{args[0], time.Duration(d) * time.Millisecond}
 		}
 	}
 }
