@@ -34,7 +34,7 @@ type expireInfo struct {
 }
 
 // node information
-var replicaof bool
+var role string
 
 // data store
 var dbstore = make(map[string]string)
@@ -83,7 +83,6 @@ func get(key string) (string, bool) {
 
 func expireKeys(in <-chan expireInfo) {
 	for val := range in {
-		fmt.Println("dur: ", val.ttm)
 		tick := time.NewTicker(val.ttm)
 		<-tick.C
 		mu.Lock()
@@ -172,11 +171,7 @@ func getKeys() []string {
 }
 
 func getInfoDetails(cmds ...string) string {
-	role := "master"
 	if len(cmds) > 0 && cmds[0] == "replication" {
-		if replicaof {
-			role = "slave"
-		}
 		return fmt.Sprintf("%s:%s", "role", role)
 	}
 	return ""
@@ -225,7 +220,6 @@ func handleConn(conn net.Conn) {
 	defer conn.Close()
 	go expireKeys(expireChannel)
 	for {
-		fmt.Println("got here ...")
 		barr := make([]byte, 1024)
 		_, err := conn.Read(barr)
 		if err == io.EOF {
@@ -235,10 +229,8 @@ func handleConn(conn net.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("raw: ", string(barr))
 		in := input{raw: barr}
 		in.parse()
-		fmt.Println("cmds: ", in.cmds)
 		switch strings.ToUpper(in.cmds[0]) {
 		// TODO: write handlers for each of the query
 		case "PING":
@@ -272,7 +264,6 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
-			fmt.Println("info details: ", info)
 			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
 			mustCopy(conn, strings.NewReader(resp))
 		default:
@@ -283,11 +274,16 @@ func handleConn(conn net.Conn) {
 
 func main() {
 	var port int
+	var replicaOf string
 	flag.IntVar(&port, "port", 6379, "port for different nodes of cluster")
-	flag.BoolVar(&replicaof, "replicaof", false, "identify the node as master or replica")
+	flag.StringVar(&replicaOf, "replicaof", "", "host and port of replica")
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
+	role = "master"
+	if replicaOf != "" {
+		role = "slave"
+	}
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
