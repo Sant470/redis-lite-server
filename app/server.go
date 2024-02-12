@@ -284,6 +284,7 @@ func main() {
 	if replicaOf != "" {
 		role = "slave"
 	}
+	fmt.Println("role: ", role)
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
