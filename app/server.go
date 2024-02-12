@@ -211,7 +211,6 @@ func (i *input) parse() {
 	if err != nil {
 		log.Fatal("error reading 1st byte: ", err)
 	}
-	fmt.Println("b: ", string(b))
 	switch b {
 	case Array:
 		cmds, err := decodeArray(r)
@@ -226,6 +225,7 @@ func handleConn(conn net.Conn) {
 	defer conn.Close()
 	go expireKeys(expireChannel)
 	for {
+		fmt.Println("got here ...")
 		barr := make([]byte, 1024)
 		_, err := conn.Read(barr)
 		if err == io.EOF {
