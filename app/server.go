@@ -255,6 +255,8 @@ func handleConn(conn net.Conn) {
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeBulkString(info)))
+		case "REPLCONF":
+			mustCopy(conn, strings.NewReader("+OK\r\n"))
 		default:
 			mustCopy(conn, strings.NewReader("+PONG\r\n"))
 		}
