@@ -16,13 +16,6 @@ import (
 	"time"
 )
 
-const (
-	Array = '*'
-	Bulk  = '$'
-	Empty = "$-1"
-	CRLF  = "\r\n"
-)
-
 type input struct {
 	raw  []byte
 	cmds []string
@@ -33,8 +26,7 @@ type expireInfo struct {
 	ttm time.Duration
 }
 
-// node information
-var role string
+var node = &Node{Role: "master"}
 
 // data store
 var dbstore = make(map[string]string)
@@ -172,7 +164,12 @@ func getKeys() []string {
 
 func getInfoDetails(cmds ...string) string {
 	if len(cmds) > 0 && cmds[0] == "replication" {
-		return fmt.Sprintf("%s:%s", "role", role)
+		info := ""
+		nodeMap := node.FieldVapMap()
+		for key, val := range nodeMap {
+			info += fmt.Sprintf("%s:%v%s", key, val, CRLF)
+		}
+		return info
 	}
 	return ""
 }
@@ -248,7 +245,7 @@ func handleConn(conn net.Conn) {
 					mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%s", Empty, "\r\n")))
 					break
 				}
-				res := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(val), CRLF, val, CRLF)
+				res := encodeBulkString(val)
 				mustCopy(conn, strings.NewReader(res))
 				break
 			}
@@ -264,8 +261,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(resp))
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
-			resp := fmt.Sprintf("%s%d%s%s%s", string(Bulk), len(info), CRLF, info, CRLF)
-			mustCopy(conn, strings.NewReader(resp))
+			mustCopy(conn, strings.NewReader(encodeBulkString(info)))
 		default:
 			mustCopy(conn, strings.NewReader("+PONG\r\n"))
 		}
@@ -280,11 +276,15 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
-	role = "master"
 	if replicaOf != "" {
-		role = "slave"
+		node.Role = "slave"
 	}
-	fmt.Println("role: ", role)
+	if node.Role == "master" {
+		offset := 0
+		repId := "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb"
+		node.MasterReplOffset = &offset
+		node.MasterReplID = &repId
+	}
 	path := filepath.Join(dir, dbfilename)
 	file, err := os.Open(path)
 	if err != nil {
