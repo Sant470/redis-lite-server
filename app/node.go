@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -26,11 +28,27 @@ func (node *Node) FieldVapMap() map[string]interface{} {
 }
 
 // TODO: implements retries in case of failure
-func (node *Node) HandShake() {
+func (node *Node) HandShake(replica *Node) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *node.Host, *node.Port))
 	if err != nil {
 		log.Fatalf("error connecting to node: %s, error: %s", node.Role, err.Error())
 	}
 	defer conn.Close()
+	reader := bufio.NewReader(conn)
+	barr := make([]byte, 1024)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
+	reader.Read(barr)
+	if string(barr) != "+OK\r\n" {
+		return
+	}
+	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "listening-port", strconv.Itoa(*replica.Port)})))
+	reader.Read(barr)
+	if string(barr) != "+OK\r\n" {
+		return
+	}
+	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
+	reader.Read(barr)
+	if string(barr) != "+OK\r\n" {
+		return
+	}
 }
