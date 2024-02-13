@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -18,12 +17,12 @@ type Node struct {
 }
 
 // TODO: implements using reflect
-func (node *Node) FieldVapMap() map[string]interface{} {
-	nodeMap := map[string]interface{}{}
-	barr, _ := json.Marshal(node)
-	json.Unmarshal(barr, &nodeMap)
-	return nodeMap
-}
+// func (node *Node) FieldVapMap() map[string]interface{} {
+// 	nodeMap := map[string]interface{}{}
+// 	barr, _ := json.Marshal(node)
+// 	json.Unmarshal(barr, &nodeMap)
+// 	return nodeMap
+// }
 
 // TODO: implements retries in case of failure
 func (node *Node) HandShake() {

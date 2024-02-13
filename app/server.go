@@ -157,10 +157,12 @@ func getKeys() []string {
 
 func getInfoDetails(cmds ...string) string {
 	if len(cmds) > 0 && cmds[0] == "replication" {
-		info := ""
-		nodeMap := node.FieldVapMap()
-		for key, val := range nodeMap {
-			info += fmt.Sprintf("%s:%v%s", key, val, CRLF)
+		info := fmt.Sprintf("%s:%s%s", "role", node.Role, CRLF)
+		if node.MasterReplID != nil {
+			info += fmt.Sprintf("%s:%v%s", "master_replid", *node.MasterReplID, CRLF)
+		}
+		if node.MasterReplOffset != nil {
+			info += fmt.Sprintf("%s:%x%s", "master_repl_offset", *node.MasterReplOffset, CRLF)
 		}
 		return info
 	}
