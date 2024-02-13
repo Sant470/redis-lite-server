@@ -39,19 +39,10 @@ func (node *Node) HandShake(replica *Node) {
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
 	reader.Read(barr)
 	fmt.Println("barr 0: ", string(barr))
-	if string(barr) != "+PONG\r\n" {
-		return
-	}
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "listening-port", strconv.Itoa(*replica.Port)})))
 	reader.Read(barr)
 	fmt.Println("barr 1:", string(barr))
-	if string(barr) != "+OK\r\n" {
-		return
-	}
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
 	reader.Read(barr)
 	fmt.Println("barr 1:", string(barr))
-	if string(barr) != "+OK\r\n" {
-		return
-	}
 }
