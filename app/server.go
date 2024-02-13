@@ -224,12 +224,12 @@ func handleConn(conn net.Conn) {
 		switch strings.ToUpper(in.cmds[0]) {
 		// TODO: write handlers for each of the query
 		case "PING":
-			mustCopy(conn, strings.NewReader("+PONG\r\n"))
+			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		case "ECHO":
-			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%s%s", "+", in.cmds[1], "\r\n")))
+			mustCopy(conn, strings.NewReader(encodeSimpleString(in.cmds[1])))
 		case "SET":
 			set(in.cmds[1:]...)
-			mustCopy(conn, strings.NewReader("+OK\r\n"))
+			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
 		case "GET":
 			val, OK := get(in.cmds[1])
 			if !OK {
@@ -238,11 +238,10 @@ func handleConn(conn net.Conn) {
 					mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%s", Empty, "\r\n")))
 					break
 				}
-				res := encodeBulkString(val)
-				mustCopy(conn, strings.NewReader(res))
+				mustCopy(conn, strings.NewReader(encodeBulkString(val)))
 				break
 			}
-			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%s%s", "+", val, "\r\n")))
+			mustCopy(conn, strings.NewReader(encodeSimpleString(val)))
 		case "CONFIG":
 			if strings.ToUpper(in.cmds[1]) == "GET" {
 				resp := configDetail(in.cmds[2])
@@ -250,15 +249,23 @@ func handleConn(conn net.Conn) {
 			}
 		case "KEYS":
 			vals := getKeys()
-			resp := encodeArray(vals)
-			mustCopy(conn, strings.NewReader(resp))
+			mustCopy(conn, strings.NewReader(encodeArray(vals)))
 		case "INFO":
 			info := getInfoDetails(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeBulkString(info)))
 		case "REPLCONF":
-			mustCopy(conn, strings.NewReader("+OK\r\n"))
+			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
+		case "PSYNC":
+			result := "FULLRESYNC"
+			if in.cmds[1] == "?" {
+				result += fmt.Sprintf(" %s", *node.MasterReplID)
+			}
+			if in.cmds[2] == "-1" {
+				result += fmt.Sprintf(" %d", *node.MasterReplOffset)
+			}
+			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 		default:
-			mustCopy(conn, strings.NewReader("+PONG\r\n"))
+			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		}
 	}
 }
