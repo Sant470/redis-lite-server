@@ -157,12 +157,10 @@ func getKeys() []string {
 
 func getInfoDetails(cmds ...string) string {
 	if len(cmds) > 0 && cmds[0] == "replication" {
-		info := fmt.Sprintf("%s:%s%s", "role", node.Role, CRLF)
-		if node.MasterReplID != nil {
-			info += fmt.Sprintf("%s:%v%s", "master_replid", *node.MasterReplID, CRLF)
-		}
-		if node.MasterReplOffset != nil {
-			info += fmt.Sprintf("%s:%x%s", "master_repl_offset", *node.MasterReplOffset, CRLF)
+		info := ""
+		nodeMap := node.FieldVapMap()
+		for key, val := range nodeMap {
+			info += fmt.Sprintf("%s:%v%s", key, val, CRLF)
 		}
 		return info
 	}
@@ -273,6 +271,7 @@ func main() {
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
 	if replicaOf != "" {
+		node.Role = "slave"
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		masterNode.Host = &replicaOf
 		masterNode.Port = &masterPort
