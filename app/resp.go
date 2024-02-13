@@ -11,7 +11,7 @@ const (
 )
 
 func encodeSimpleString(str string) string {
-	return fmt.Sprintf("%v%s%s", String, str, CRLF)
+	return fmt.Sprintf("%b%s%s", String, str, CRLF)
 }
 
 func encodeBulkString(str string) string {
