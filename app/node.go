@@ -27,9 +27,9 @@ func (node *Node) FieldVapMap() map[string]interface{} {
 
 // TODO: implements retries in case of failure
 func (node *Node) HandShake() {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", node.Host, node.Port))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *node.Host, *node.Port))
 	if err != nil {
-		log.Fatal("error connecting to node: ", node.Role, err.Error())
+		log.Fatalf("error connecting to node: %s, error: %s", node.Role, err.Error())
 	}
 	defer conn.Close()
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
