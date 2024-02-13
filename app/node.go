@@ -44,5 +44,5 @@ func (node *Node) HandShake(replica *Node) {
 	fmt.Println("barr 1:", string(barr))
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
 	reader.Read(barr)
-	fmt.Println("barr 1:", string(barr))
+	fmt.Println("barr 2:", string(barr))
 }
