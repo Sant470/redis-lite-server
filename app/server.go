@@ -270,12 +270,13 @@ func main() {
 	flag.StringVar(&dir, "dir", "", "directory of the rdb file")
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
+	node.Port = &port
 	if replicaOf != "" {
 		node.Role = "slave"
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		masterNode.Host = &replicaOf
 		masterNode.Port = &masterPort
-		go masterNode.HandShake()
+		go masterNode.HandShake(node)
 	}
 	if node.Role == "master" {
 		offset := 0
