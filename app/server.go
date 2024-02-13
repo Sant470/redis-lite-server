@@ -26,7 +26,9 @@ type expireInfo struct {
 	ttm time.Duration
 }
 
+// replica varibales
 var node = &Node{Role: "master"}
+var masterNode = &Node{Role: "master"}
 
 // data store
 var dbstore = make(map[string]string)
@@ -127,15 +129,6 @@ func configDetail(key string) string {
 		args = append(args, dbfilename)
 	}
 	return encodeArray(args)
-}
-
-func encodeArray(args []string) string {
-	response := ""
-	response = fmt.Sprintf("%s%s%d%s", response, string(Array), len(args), CRLF)
-	for i := 0; i < len(args); i++ {
-		response = fmt.Sprintf("%s%s%d%s%s%s", response, string(Bulk), len(args[i]), CRLF, args[i], CRLF)
-	}
-	return response
 }
 
 func getKey(key string) string {
@@ -269,6 +262,7 @@ func handleConn(conn net.Conn) {
 }
 
 func main() {
+	args := os.Args
 	var port int
 	var replicaOf string
 	flag.IntVar(&port, "port", 6379, "port for different nodes of cluster")
@@ -277,7 +271,10 @@ func main() {
 	flag.StringVar(&dbfilename, "dbfilename", "", "rdb file name")
 	flag.Parse()
 	if replicaOf != "" {
-		node.Role = "slave"
+		masterPort, _ := strconv.Atoi(args[len(args)-1])
+		masterNode.Host = &replicaOf
+		masterNode.Port = &masterPort
+		go masterNode.HandShake()
 	}
 	if node.Role == "master" {
 		offset := 0
