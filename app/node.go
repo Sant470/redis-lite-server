@@ -5,7 +5,7 @@ import "encoding/json"
 // node information
 type Node struct {
 	Role             string  `json:"role"`
-	MasterReplID     *string `json:"master_repl_id,omitempty"`
+	MasterReplID     *string `json:"master_replid,omitempty"`
 	MasterReplOffset *int    `json:"master_repl_offset,omitempty"`
 }
 
