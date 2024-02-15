@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,6 +26,12 @@ func (node *Node) FieldVapMap() map[string]interface{} {
 	return nodeMap
 }
 
+func must(err error) {
+	if err != nil {
+		log.Fatalf("error reading from connection: %s", err)
+	}
+}
+
 // TODO: implements retries in case of failure
 func (node *Node) HandShake(replica *Node) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *node.Host, *node.Port))
@@ -34,14 +39,20 @@ func (node *Node) HandShake(replica *Node) {
 		log.Fatalf("error connecting to node: %s, error: %s", node.Role, err.Error())
 	}
 	defer conn.Close()
-	reader := bufio.NewReader(conn)
 	barr := make([]byte, 1024)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
-	reader.Read(barr)
+	_, err = conn.Read(barr)
+	must(err)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "listening-port", strconv.Itoa(*replica.Port)})))
-	reader.Read(barr)
+	_, err = conn.Read(barr)
+	must(err)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
-	reader.Read(barr)
+	_, err = conn.Read(barr)
+	must(err)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"PSYNC", "?", "-1"})))
-	reader.Read(barr)
+	_, err = conn.Read(barr)
+	must(err)
+	_, err = conn.Read(barr)
+	must(err)
+	fmt.Println("cont: ", string(barr))
 }
