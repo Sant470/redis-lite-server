@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -16,13 +15,21 @@ type Node struct {
 	MasterReplOffset *int    `json:"master_repl_offset,omitempty"`
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
+	Signal           chan struct{}
+	Transfer         chan string
 }
 
 // TODO: implements using reflect
 func (node *Node) FieldVapMap() map[string]interface{} {
-	nodeMap := map[string]interface{}{}
-	barr, _ := json.Marshal(node)
-	json.Unmarshal(barr, &nodeMap)
+	nodeMap := map[string]interface{}{
+		"role": node.Role,
+	}
+	if node.MasterReplID != nil {
+		nodeMap["master_replid"] = *node.MasterReplID
+	}
+	if node.MasterReplOffset != nil {
+		nodeMap["master_repl_offset"] = *node.MasterReplOffset
+	}
 	return nodeMap
 }
 
@@ -33,10 +40,10 @@ func must(err error) {
 }
 
 // TODO: implements retries in case of failure
-func (node *Node) HandShake(replica *Node) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *node.Host, *node.Port))
+func (master *Node) HandShake(replica *Node) {
+	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *master.Host, *master.Port))
 	if err != nil {
-		log.Fatalf("error connecting to node: %s, error: %s", node.Role, err.Error())
+		log.Fatalf("error connecting to node: %s, error: %s", master.Role, err.Error())
 	}
 	defer conn.Close()
 	barr := make([]byte, 1024)
@@ -55,4 +62,8 @@ func (node *Node) HandShake(replica *Node) {
 	_, err = conn.Read(barr)
 	must(err)
 	fmt.Println("cont: ", string(barr))
+	close(replica.Signal)
+	for data := range node.Transfer {
+		fmt.Println(data)
+	}
 }
