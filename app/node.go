@@ -45,7 +45,8 @@ func must(err error) {
 func (master *Node) HandShake(replica *Node) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *master.Host, *master.Port))
 	if err != nil {
-		log.Fatalf("error connecting to node: %s, error: %s", master.Role, err.Error())
+		log.Printf("error connecting to node: %s, error: %s", master.Role, err.Error())
+		return
 	}
 	// defer conn.Close()
 	replica.Conn = conn
