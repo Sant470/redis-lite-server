@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // node information
@@ -16,7 +17,8 @@ type Node struct {
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	Signal           chan struct{}
-	Transfer         chan string
+	Lock             sync.RWMutex
+	Conn             net.Conn
 }
 
 // TODO: implements using reflect
@@ -45,7 +47,8 @@ func (master *Node) HandShake(replica *Node) {
 	if err != nil {
 		log.Fatalf("error connecting to node: %s, error: %s", master.Role, err.Error())
 	}
-	defer conn.Close()
+	// defer conn.Close()
+	replica.Conn = conn
 	barr := make([]byte, 1024)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
 	_, err = conn.Read(barr)
@@ -61,9 +64,5 @@ func (master *Node) HandShake(replica *Node) {
 	must(err)
 	_, err = conn.Read(barr)
 	must(err)
-	fmt.Println("cont: ", string(barr))
 	close(replica.Signal)
-	for data := range node.Transfer {
-		fmt.Println(data)
-	}
 }

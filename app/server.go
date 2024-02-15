@@ -30,7 +30,7 @@ type expireInfo struct {
 // replica varibales
 var node = &Node{Role: "master"}
 var masterNode = &Node{Role: "master"}
-var replicas = []Node{}
+var replicas = []*Node{}
 
 // data store
 var dbstore = make(map[string]string)
@@ -214,7 +214,7 @@ func populateReplicas(data []byte) {
 	for _, replica := range replicas {
 		_, wd := <-replica.Signal
 		fmt.Println("wd: ", wd)
-		replica.Transfer <- string(data)
+		replica.Conn.Write(data)
 	}
 }
 
@@ -264,7 +264,6 @@ func handleConn(conn net.Conn) {
 			vals := getKeys()
 			mustCopy(conn, strings.NewReader(encodeArray(vals)))
 		case "INFO":
-			fmt.Println("got here: info")
 			info := getInfoDetails(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeBulkString(info)))
 		case "REPLCONF":
@@ -300,8 +299,7 @@ func main() {
 	if replicaOf != "" {
 		node.Role = "slave"
 		node.Signal = make(chan struct{})
-		node.Transfer = make(chan string)
-		replicas = append(replicas, *node)
+		replicas = append(replicas, node)
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		masterNode.Host = &replicaOf
 		masterNode.Port = &masterPort
