@@ -269,7 +269,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
 			//$<length>\r\n<contents>
-			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(String), len(cont), CRLF, cont)))
+			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		}
