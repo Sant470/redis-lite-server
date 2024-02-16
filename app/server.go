@@ -218,6 +218,11 @@ func populateReplicas(barr []byte) {
 
 func handleConn(conn net.Conn) {
 	alive := false
+	defer func() {
+		if !alive {
+			conn.Close()
+		}
+	}()
 	go expireKeys(expireChannel)
 	for {
 		barr := make([]byte, 1024)
@@ -282,9 +287,6 @@ func handleConn(conn net.Conn) {
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		}
-	}
-	if !alive {
-		conn.Close()
 	}
 }
 

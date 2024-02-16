@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -16,7 +17,7 @@ type Node struct {
 	MasterReplOffset *int    `json:"master_repl_offset,omitempty"`
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
-	Writer           net.Conn
+	Writer           io.Writer
 	Lock             sync.RWMutex
 }
 
