@@ -226,6 +226,7 @@ func handleConn(conn net.Conn) {
 	defer func() {
 		if !alive {
 			conn.Close()
+			// close the channels
 			close(expireChannel)
 			close(transferChannel)
 		}
