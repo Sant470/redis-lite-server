@@ -238,7 +238,8 @@ func handleConn(conn net.Conn) {
 	go populateReplicas(transferChannel)
 	for {
 		barr := make([]byte, 1024)
-		_, err := conn.Read(barr)
+		size, err := conn.Read(barr)
+		data := barr[:size]
 		if err == io.EOF {
 			log.Println("client is done")
 			return
@@ -257,7 +258,7 @@ func handleConn(conn net.Conn) {
 		case "SET":
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
-			transferChannel <- string(barr)
+			transferChannel <- string(data)
 		case "GET":
 			val, OK := get(in.cmds[1])
 			if !OK {
