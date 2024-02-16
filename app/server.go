@@ -213,13 +213,10 @@ func (i *input) parse() {
 
 func populateReplicas(in <-chan string) {
 	for data := range in {
-		fmt.Println("data: ", data)
 		for _, replica := range replicas {
-			go func(replica *Node, data string) {
-				replica.Lock.Lock()
-				replica.Writer.Write([]byte(data))
-				replica.Lock.Unlock()
-			}(replica, data)
+			replica.Lock.Lock()
+			replica.Writer.Write([]byte(data))
+			replica.Lock.Unlock()
 		}
 	}
 }
@@ -229,9 +226,8 @@ func handleConn(conn net.Conn) {
 	defer func() {
 		if !alive {
 			conn.Close()
-			// here ..
-			// close(expireChannel)
-			// close(transferChannel)
+			close(expireChannel)
+			close(transferChannel)
 		}
 	}()
 	go expireKeys(expireChannel)
