@@ -282,11 +282,10 @@ func handleConn(conn net.Conn) {
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		}
-		if !alive {
-			conn.Close()
-		}
 	}
-
+	if !alive {
+		conn.Close()
+	}
 }
 
 func main() {
