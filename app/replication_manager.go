@@ -31,6 +31,7 @@ func (rm *ReplicaManager) populateReplicas() {
 	rm.Mu.Lock()
 	for _, writer := range rm.Writers {
 		for _, data := range rm.Buffer {
+			// testing once again
 			writer.Write([]byte(data))
 		}
 	}
