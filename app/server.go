@@ -31,6 +31,7 @@ type expireInfo struct {
 var node = &Node{Role: "master"}
 var masterNode = &Node{Role: "master"}
 var replicas = []*Node{}
+var transferChannel = make(chan string)
 
 // data store
 var dbstore = make(map[string]string)
@@ -210,9 +211,13 @@ func (i *input) parse() {
 	}
 }
 
-func populateReplicas(barr []byte) {
-	for _, replica := range replicas {
-		replica.Writer.Write(barr)
+func populateReplicas(in <-chan string) {
+	for data := range in {
+		for _, replica := range replicas {
+			go func(conn net.Conn, data string) {
+				conn.Write([]byte(data))
+			}(replica.Writer, data)
+		}
 	}
 }
 
@@ -221,9 +226,12 @@ func handleConn(conn net.Conn) {
 	defer func() {
 		if !alive {
 			conn.Close()
+			close(expireChannel)
+			close(transferChannel)
 		}
 	}()
 	go expireKeys(expireChannel)
+	go populateReplicas(transferChannel)
 	for {
 		barr := make([]byte, 1024)
 		_, err := conn.Read(barr)
@@ -243,9 +251,9 @@ func handleConn(conn net.Conn) {
 		case "ECHO":
 			mustCopy(conn, strings.NewReader(encodeSimpleString(in.cmds[1])))
 		case "SET":
-			go populateReplicas(barr)
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
+			transferChannel <- string(barr)
 		case "GET":
 			val, OK := get(in.cmds[1])
 			if !OK {
