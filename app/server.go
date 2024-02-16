@@ -30,8 +30,29 @@ type expireInfo struct {
 // replica varibales
 var node = &Node{Role: "master"}
 var masterNode = &Node{Role: "master"}
-var replicas = []*Node{}
-var transferChannel = make(chan string)
+
+type replicaManager struct {
+	Writers []net.Conn
+	Mu      sync.Mutex
+}
+
+var manager = &replicaManager{Writers: []net.Conn{}}
+
+func (rm *replicaManager) addWriters(conn net.Conn) {
+	rm.Mu.Lock()
+	rm.Writers = append(rm.Writers, conn)
+	rm.Mu.Unlock()
+}
+
+func (rm *replicaManager) populateReplicas(data []byte) {
+	rm.Mu.Lock()
+	for _, writer := range rm.Writers {
+		writer.Write(data)
+	}
+	rm.Mu.Unlock()
+}
+
+// var transferChannel = make(chan string)
 
 // data store
 var dbstore = make(map[string]string)
@@ -211,16 +232,6 @@ func (i *input) parse() {
 	}
 }
 
-func populateReplicas(in <-chan string) {
-	for data := range in {
-		for _, replica := range replicas {
-			replica.Lock.Lock()
-			replica.Writer.Write([]byte(data))
-			replica.Lock.Unlock()
-		}
-	}
-}
-
 func handleConn(conn net.Conn) {
 	alive := false
 	defer func() {
@@ -228,11 +239,11 @@ func handleConn(conn net.Conn) {
 			conn.Close()
 			// close the channels
 			close(expireChannel)
-			close(transferChannel)
+			// close(transferChannel)
 		}
 	}()
 	go expireKeys(expireChannel)
-	go populateReplicas(transferChannel)
+	// go populateReplicas(transferChannel)
 	for {
 		barr := make([]byte, 1024)
 		size, err := conn.Read(barr)
@@ -255,7 +266,7 @@ func handleConn(conn net.Conn) {
 		case "SET":
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
-			transferChannel <- string(data)
+			go manager.populateReplicas(data)
 		case "GET":
 			val, OK := get(in.cmds[1])
 			if !OK {
@@ -292,7 +303,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
 			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
-			replicas = append(replicas, &Node{Writer: conn})
+			manager.addWriters(conn)
 			alive = true
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
