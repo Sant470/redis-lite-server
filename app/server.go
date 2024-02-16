@@ -210,11 +210,9 @@ func (i *input) parse() {
 	}
 }
 
-func populateReplicas(inp input) {
-	if strings.ToUpper(inp.cmds[0]) == "SET" {
-		for _, replica := range replicas {
-			replica.Writer.Write(inp.raw)
-		}
+func populateReplicas(barr []byte) {
+	for _, replica := range replicas {
+		replica.Writer.Write(barr)
 	}
 }
 
@@ -232,7 +230,6 @@ func handleConn(conn net.Conn) {
 			log.Fatal(err)
 		}
 		in := input{raw: barr}
-		go populateReplicas(in)
 		in.parse()
 		switch strings.ToUpper(in.cmds[0]) {
 		// TODO: write handlers for each of the query
@@ -241,7 +238,7 @@ func handleConn(conn net.Conn) {
 		case "ECHO":
 			mustCopy(conn, strings.NewReader(encodeSimpleString(in.cmds[1])))
 		case "SET":
-			// go populateReplicas(barr)
+			go populateReplicas(barr)
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
 		case "GET":
