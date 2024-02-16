@@ -34,5 +34,6 @@ func (rm *ReplicaManager) populateReplicas() {
 			writer.Write([]byte(data))
 		}
 	}
+	rm.Buffer = make([]string, 0)
 	rm.Mu.Unlock()
 }
