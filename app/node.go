@@ -7,7 +7,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 // node information
@@ -18,7 +17,6 @@ type Node struct {
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	Writer           io.Writer
-	Lock             sync.RWMutex
 }
 
 // TODO: implements using reflect
