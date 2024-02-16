@@ -217,13 +217,10 @@ func handleConn(conn net.Conn) {
 	defer func() {
 		if !alive {
 			conn.Close()
-			// close the channels
 			close(expireChannel)
-			// close(transferChannel)
 		}
 	}()
 	go expireKeys(expireChannel)
-	// go populateReplicas(transferChannel)
 	for {
 		barr := make([]byte, 1024)
 		size, err := conn.Read(barr)
@@ -284,7 +281,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
 			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
-			rm.AddWriters(conn)
+			rm.AddReplica(conn)
 			alive = true
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))

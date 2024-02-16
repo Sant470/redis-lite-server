@@ -10,11 +10,13 @@ import (
 
 // node information
 type Node struct {
-	Role             string  `json:"role"`
-	MasterReplID     *string `json:"master_replid,omitempty"`
-	MasterReplOffset *int    `json:"master_repl_offset,omitempty"`
-	Host             *string `json:"host,omitempty"`
-	Port             *int    `json:"port,omitempty"`
+	Role             string            `json:"role"`
+	MasterReplID     *string           `json:"master_replid,omitempty"`
+	MasterReplOffset *int              `json:"master_repl_offset,omitempty"`
+	Host             *string           `json:"host,omitempty"`
+	Port             *int              `json:"port,omitempty"`
+	DataStore        map[string]string `json:"datastore"`
+	Conn             net.Conn
 }
 
 // TODO: implements using reflect

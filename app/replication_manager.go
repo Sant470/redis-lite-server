@@ -6,18 +6,18 @@ import (
 )
 
 type ReplicaManager struct {
-	Writers []net.Conn
-	Buffer  []string
-	Mu      sync.Mutex
+	Nodes  []*Node
+	Buffer []string
+	Mu     sync.Mutex
 }
 
 func NewRePlicationManager() *ReplicaManager {
-	return &ReplicaManager{Writers: []net.Conn{}, Buffer: []string{}}
+	return &ReplicaManager{Nodes: []*Node{}, Buffer: make([]string, 0)}
 }
 
-func (rm *ReplicaManager) AddWriters(conn net.Conn) {
+func (rm *ReplicaManager) AddReplica(conn net.Conn) {
 	rm.Mu.Lock()
-	rm.Writers = append(rm.Writers, conn)
+	rm.Nodes = append(rm.Nodes, &Node{Conn: conn, DataStore: map[string]string{}})
 	rm.Mu.Unlock()
 }
 
@@ -29,12 +29,9 @@ func (rm *ReplicaManager) AppendBuffer(data string) {
 
 func (rm *ReplicaManager) populateReplicas() {
 	rm.Mu.Lock()
-	for _, writer := range rm.Writers {
+	for _, node := range rm.Nodes {
 		for _, data := range rm.Buffer {
-			// testing once again
-			// test it again..
-			// again ..
-			writer.Write([]byte(data))
+			node.Conn.Write([]byte(data))
 		}
 	}
 	rm.Buffer = make([]string, 0)
