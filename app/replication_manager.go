@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -31,8 +30,6 @@ func (rm *ReplicaManager) populateReplicas() {
 	rm.Mu.Lock()
 	for _, node := range rm.Nodes {
 		for _, data := range rm.Buffer {
-			// fmt.Println("data: ", data)
-			fmt.Println("node:", node)
 			node.Writer.Write([]byte(data))
 		}
 	}

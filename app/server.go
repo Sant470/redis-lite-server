@@ -224,8 +224,6 @@ func handleConn(conn net.Conn) {
 		barr := make([]byte, 1024)
 		size, err := conn.Read(barr)
 		data := barr[:size]
-		fmt.Println("node: ", node)
-		fmt.Println("data: ", string(data))
 		if err == io.EOF {
 			log.Println("client is done")
 			return
@@ -328,7 +326,6 @@ func main() {
 		log.Fatal(err)
 	}
 	// accepts connections in loop ..
-	fmt.Println("main, node: ", node)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
