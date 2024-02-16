@@ -30,27 +30,7 @@ type expireInfo struct {
 // replica varibales
 var node = &Node{Role: "master"}
 var masterNode = &Node{Role: "master"}
-
-type replicaManager struct {
-	Writers []net.Conn
-	Mu      sync.Mutex
-}
-
-var manager = &replicaManager{Writers: []net.Conn{}}
-
-func (rm *replicaManager) addWriters(conn net.Conn) {
-	rm.Mu.Lock()
-	rm.Writers = append(rm.Writers, conn)
-	rm.Mu.Unlock()
-}
-
-func (rm *replicaManager) populateReplicas(data []byte) {
-	rm.Mu.Lock()
-	for _, writer := range rm.Writers {
-		writer.Write(data)
-	}
-	rm.Mu.Unlock()
-}
+var rm = NewRePlicationManager()
 
 // var transferChannel = make(chan string)
 
@@ -266,7 +246,8 @@ func handleConn(conn net.Conn) {
 		case "SET":
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
-			go manager.populateReplicas(data)
+			rm.AppendBuffer(string(data))
+			go rm.populateReplicas()
 		case "GET":
 			val, OK := get(in.cmds[1])
 			if !OK {
@@ -303,7 +284,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
 			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
-			manager.addWriters(conn)
+			rm.AddWriters(conn)
 			alive = true
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
