@@ -33,6 +33,7 @@ func (rm *ReplicaManager) populateReplicas() {
 		for _, data := range rm.Buffer {
 			// testing once again
 			// test it again..
+			// again ..
 			writer.Write([]byte(data))
 		}
 	}
