@@ -213,7 +213,7 @@ func (i *input) parse() {
 
 func populateReplicas(in <-chan string) {
 	for data := range in {
-		fmt.Println("data: ", data)
+		fmt.Println("data:", data)
 		for _, replica := range replicas {
 			go func(replica *Node, data string) {
 				replica.Lock.Lock()
