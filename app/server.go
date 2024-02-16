@@ -325,7 +325,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// accepts connections in loop ..
 	for {
 		conn, err := l.Accept()
 		if err != nil {
