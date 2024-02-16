@@ -214,9 +214,11 @@ func (i *input) parse() {
 func populateReplicas(in <-chan string) {
 	for data := range in {
 		for _, replica := range replicas {
-			go func(conn net.Conn, data string) {
-				conn.Write([]byte(data))
-			}(replica.Writer, data)
+			go func(replica *Node, data string) {
+				replica.Lock.Lock()
+				defer replica.Lock.Unlock()
+				replica.Writer.Write([]byte(data))
+			}(replica, data)
 		}
 	}
 }

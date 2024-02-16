@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // node information
@@ -16,6 +17,7 @@ type Node struct {
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	Writer           net.Conn
+	Lock             sync.Mutex
 }
 
 // TODO: implements using reflect
