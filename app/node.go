@@ -16,9 +16,8 @@ type Node struct {
 	MasterReplOffset *int    `json:"master_repl_offset,omitempty"`
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
-	Signal           chan struct{}
+	Writer           net.Conn
 	Lock             sync.RWMutex
-	Conn             net.Conn
 }
 
 // TODO: implements using reflect
@@ -49,7 +48,6 @@ func (master *Node) HandShake(replica *Node) {
 		return
 	}
 	// defer conn.Close()
-	replica.Conn = conn
 	barr := make([]byte, 1024)
 	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
 	_, err = conn.Read(barr)
@@ -65,5 +63,4 @@ func (master *Node) HandShake(replica *Node) {
 	must(err)
 	_, err = conn.Read(barr)
 	must(err)
-	close(replica.Signal)
 }

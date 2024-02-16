@@ -210,16 +210,16 @@ func (i *input) parse() {
 	}
 }
 
-func populateReplicas(data []byte) {
-	for _, replica := range replicas {
-		_, wd := <-replica.Signal
-		fmt.Println("wd: ", wd)
-		replica.Conn.Write(data)
+func populateReplicas(inp input) {
+	if strings.ToUpper(inp.cmds[0]) == "SET" {
+		for _, replica := range replicas {
+			replica.Writer.Write(inp.raw)
+		}
 	}
 }
 
 func handleConn(conn net.Conn) {
-	defer conn.Close()
+	alive := false
 	go expireKeys(expireChannel)
 	for {
 		barr := make([]byte, 1024)
@@ -232,6 +232,7 @@ func handleConn(conn net.Conn) {
 			log.Fatal(err)
 		}
 		in := input{raw: barr}
+		go populateReplicas(in)
 		in.parse()
 		switch strings.ToUpper(in.cmds[0]) {
 		// TODO: write handlers for each of the query
@@ -240,7 +241,7 @@ func handleConn(conn net.Conn) {
 		case "ECHO":
 			mustCopy(conn, strings.NewReader(encodeSimpleString(in.cmds[1])))
 		case "SET":
-			go populateReplicas(barr)
+			// go populateReplicas(barr)
 			set(in.cmds[1:]...)
 			mustCopy(conn, strings.NewReader(encodeSimpleString("OK")))
 		case "GET":
@@ -278,12 +279,17 @@ func handleConn(conn net.Conn) {
 			}
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
-			//$<length>\r\n<contents>
 			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
+			replicas = append(replicas, &Node{Writer: conn})
+			alive = true
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
 		}
+		if !alive {
+			conn.Close()
+		}
 	}
+
 }
 
 func main() {
@@ -298,8 +304,6 @@ func main() {
 	node.Port = &port
 	if replicaOf != "" {
 		node.Role = "slave"
-		node.Signal = make(chan struct{})
-		replicas = append(replicas, node)
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		masterNode.Host = &replicaOf
 		masterNode.Port = &masterPort
