@@ -215,9 +215,10 @@ func populateReplicas(in <-chan string) {
 	for data := range in {
 		for _, replica := range replicas {
 			go func(replica *Node, data string) {
+				fmt.Println("data: ", data)
 				replica.Lock.Lock()
-				defer replica.Lock.Unlock()
 				replica.Writer.Write([]byte(data))
+				replica.Lock.Unlock()
 			}(replica, data)
 		}
 	}
