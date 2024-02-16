@@ -1,7 +1,7 @@
 package main
 
 import (
-	"net"
+	"fmt"
 	"sync"
 )
 
@@ -15,9 +15,9 @@ func NewRePlicationManager() *ReplicaManager {
 	return &ReplicaManager{Nodes: []*Node{}, Buffer: make([]string, 0)}
 }
 
-func (rm *ReplicaManager) AddReplica(conn net.Conn) {
+func (rm *ReplicaManager) AddReplica(node Node) {
 	rm.Mu.Lock()
-	rm.Nodes = append(rm.Nodes, &Node{Conn: conn, DataStore: map[string]string{}})
+	rm.Nodes = append(rm.Nodes, &node)
 	rm.Mu.Unlock()
 }
 
@@ -32,7 +32,8 @@ func (rm *ReplicaManager) populateReplicas() {
 	for _, node := range rm.Nodes {
 		for _, data := range rm.Buffer {
 			// fmt.Println("data: ", data)
-			node.Conn.Write([]byte(data))
+			fmt.Println("node:", node)
+			node.Writer.Write([]byte(data))
 		}
 	}
 	rm.Buffer = make([]string, 0)

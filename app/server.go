@@ -217,7 +217,6 @@ func handleConn(conn net.Conn) {
 	defer func() {
 		if !alive {
 			conn.Close()
-			close(expireChannel)
 		}
 	}()
 	go expireKeys(expireChannel)
@@ -225,6 +224,8 @@ func handleConn(conn net.Conn) {
 		barr := make([]byte, 1024)
 		size, err := conn.Read(barr)
 		data := barr[:size]
+		fmt.Println("node: ", node)
+		fmt.Println("data: ", string(data))
 		if err == io.EOF {
 			log.Println("client is done")
 			return
@@ -281,7 +282,7 @@ func handleConn(conn net.Conn) {
 			mustCopy(conn, strings.NewReader(encodeSimpleString(result)))
 			cont, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
 			mustCopy(conn, strings.NewReader(fmt.Sprintf("%s%d%s%s", string(Bulk), len(cont), CRLF, cont)))
-			rm.AddReplica(conn)
+			rm.AddReplica(Node{Writer: conn})
 			alive = true
 		default:
 			mustCopy(conn, strings.NewReader(encodeSimpleString("PONG")))
@@ -327,6 +328,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// accepts connections in loop ..
+	fmt.Println("main, node: ", node)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
