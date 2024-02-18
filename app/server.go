@@ -62,6 +62,7 @@ func expireKeys(db *dbstore, in <-chan expireInfo) {
 }
 
 func handleConn(conn net.Conn, db *dbstore) {
+	fmt.Println("node: ", node)
 	if conn == nil {
 		return
 	}
