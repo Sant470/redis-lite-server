@@ -77,7 +77,7 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 		inp := NewInput()
 		inp.parse(data)
 		cmd := strings.ToUpper(inp.cmds[0])
-		fmt.Println("cmds: ", inp.cmds)
+		fmt.Println("cmds:", inp.cmds)
 		if cmd == "SET" {
 			set(inp.cmds[1:], db)
 		}
