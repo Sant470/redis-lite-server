@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"strings"
 )
 
 // node information
@@ -66,24 +65,24 @@ func (replica *Node) HandShake(addr string) {
 	replica.Reader = conn
 }
 
-func (rep *Node) SyncDBfromMaster(db *dbstore) {
-	if rep.Reader == nil {
-		return
-	}
-	for {
-		barr := make([]byte, 1024)
-		size, err := rep.Reader.Read(barr)
-		if err != nil {
-			fmt.Println("error reading from master: ", err)
-		}
-		fmt.Println("barr: ", string(barr))
-		data := barr[:size]
-		inp := NewInput()
-		inp.parse(data)
-		cmd := strings.ToUpper(inp.cmds[0])
-		fmt.Println("cmds:", inp.cmds)
-		if cmd == "SET" {
-			db.database[inp.cmds[1]] = inp.cmds[2]
-		}
-	}
-}
+// func (rep *Node) SyncDBfromMaster(db *dbstore) {
+// 	if rep.Reader == nil {
+// 		return
+// 	}
+// 	for {
+// 		barr := make([]byte, 1024)
+// 		size, err := rep.Reader.Read(barr)
+// 		if err != nil {
+// 			fmt.Println("error reading from master: ", err)
+// 		}
+// 		fmt.Println("barr: ", string(barr))
+// 		data := barr[:size]
+// 		inp := NewInput()
+// 		inp.parse(data)
+// 		cmd := strings.ToUpper(inp.cmds[0])
+// 		fmt.Println("cmds:", inp.cmds)
+// 		if cmd == "SET" {
+// 			db.database[inp.cmds[1]] = inp.cmds[2]
+// 		}
+// 	}
+// }
