@@ -59,7 +59,7 @@ func handleConn(conn net.Conn, db *dbstore) {
 	go expireKeys(db, expireChannel)
 	if node.Role == "slave" {
 		go node.SyncDBfromMaster(db)
-		go node.SyncDBfromMaster(db)
+		// go node.SyncDBfromMaster(db)
 	}
 	barr := make([]byte, 1024)
 	for {
@@ -103,7 +103,7 @@ func main() {
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		// Once the handshake is complete, the connection will be read only stream
 		go node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
-		// go node.SyncDBfromMaster(&db)
+		go node.SyncDBfromMaster(&db)
 	}
 	if node.Role == "master" {
 		offset := 0
