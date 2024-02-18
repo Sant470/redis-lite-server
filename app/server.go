@@ -101,7 +101,7 @@ func main() {
 		node.Role = "slave"
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		// Once the handshake is complete, the connection will be read only stream
-		node.Reader = node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
+		go node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
 		// go node.SyncDBfromMaster(&db)
 	}
 	if node.Role == "master" {
