@@ -62,12 +62,12 @@ func expireKeys(db *dbstore, in <-chan expireInfo) {
 }
 
 func handleConn(conn net.Conn, db *dbstore) {
-	alive := false
-	defer func() {
-		if !alive {
-			conn.Close()
-		}
-	}()
+	// alive := false
+	// defer func() {
+	// 	if !alive {
+	// 		conn.Close()
+	// 	}
+	// }()
 	go expireKeys(db, expireChannel)
 	barr := make([]byte, 1024)
 	for {
@@ -90,7 +90,7 @@ func handleConn(conn net.Conn, db *dbstore) {
 			go rm.sendDataToReplicas()
 		}
 		if cmd == "PSYNC" {
-			alive = true
+			// alive = true
 			rm.AddReplica(Node{Writer: conn})
 			psyncResp := psyncMessage(inp.cmds[1:]...)
 			conn.Write([]byte(encodeSimpleString(psyncResp)))
