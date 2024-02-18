@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -70,11 +71,14 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 	if rep.Reader == nil {
 		return
 	}
+	barr := make([]byte, 1024)
 	for {
-		barr := make([]byte, 1024)
 		size, err := rep.Reader.Read(barr)
 		if err != nil {
 			fmt.Println("error reading from master: ", err)
+		}
+		if err == io.EOF {
+			return
 		}
 		fmt.Println("barr: ", string(barr))
 		data := barr[:size]
