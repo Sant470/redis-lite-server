@@ -82,7 +82,7 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 		cmd := strings.ToUpper(inp.cmds[0])
 		fmt.Println("cmds:", inp.cmds)
 		if cmd == "SET" {
-			set(inp.cmds[1:], db)
+			db.database[inp.cmds[1]] = inp.cmds[2]
 		}
 	}
 }
