@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 )
 
 // node information
@@ -73,5 +74,11 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 			fmt.Println("error reading from master: ", err)
 		}
 		data := barr[:size]
+		inp := NewInput()
+		inp.parse(data)
+		cmd := strings.ToUpper(inp.cmds[0])
+		if cmd == "SET" {
+			set(inp.cmds[1:], db)
+		}
 	}
 }
