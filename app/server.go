@@ -72,6 +72,7 @@ func handleConn(conn net.Conn, db *dbstore) {
 	barr := make([]byte, 1024)
 	for {
 		size, err := conn.Read(barr)
+		fmt.Println("barr: ", string(barr))
 		if err == io.EOF {
 			log.Println("client is done")
 			return
@@ -117,7 +118,8 @@ func main() {
 	if replicaOf != "" {
 		node.Role = "slave"
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
-		node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
+		conn := node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
+		go handleConn(conn, &db)
 	}
 	if node.Role == "master" {
 		offset := 0

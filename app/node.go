@@ -40,11 +40,11 @@ func must(err error) {
 	}
 }
 
-func (replica *Node) HandShake(addr string) {
+func (replica *Node) HandShake(addr string) net.Conn {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		fmt.Printf("error connecting to node: %s, error: %s", addr, err.Error())
-		return
+		return nil
 	}
 	barr := make([]byte, 1024)
 	conn.Write([]byte(encodeArray([]string{"ping"})))
@@ -61,5 +61,6 @@ func (replica *Node) HandShake(addr string) {
 	must(err)
 	_, err = conn.Read(barr)
 	must(err)
-	conn.Close()
+	// conn.Close()
+	return conn
 }
