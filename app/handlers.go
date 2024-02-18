@@ -48,7 +48,7 @@ func psyncMessage(cmds ...string) string {
 }
 
 func configDetail(key string) []string {
-	resp := []string{}
+	resp := []string{key}
 	if key == "dir" {
 		resp = append(resp, dir)
 	}
