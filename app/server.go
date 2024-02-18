@@ -62,10 +62,6 @@ func expireKeys(db *dbstore, in <-chan expireInfo) {
 }
 
 func handleConn(conn net.Conn, db *dbstore) {
-	fmt.Println("node: ", node)
-	if conn == nil {
-		return
-	}
 	alive := false
 	defer func() {
 		if !alive {
@@ -84,15 +80,14 @@ func handleConn(conn net.Conn, db *dbstore) {
 			log.Fatal(err)
 		}
 		data := barr[:size]
+		fmt.Println("role: ", node.Role)
+		fmt.Println("data: ", string(data))
 		inp := NewInput()
 		inp.parse(data)
 		cmd := strings.ToUpper(inp.cmds[0])
-		if cmd == "SET" && node.Role == "master" {
+		if cmd == "SET" {
 			rm.AppendBuffer(string(data))
-			rm.sendDataToReplicas()
-		}
-		if cmd == "SET" && node.Role == "slave" {
-			continue
+			go rm.sendDataToReplicas()
 		}
 		if cmd == "PSYNC" {
 			alive = true
@@ -105,7 +100,6 @@ func handleConn(conn net.Conn, db *dbstore) {
 			resp := inp.handle(db)
 			conn.Write([]byte(resp))
 		}
-
 	}
 }
 
@@ -123,13 +117,7 @@ func main() {
 	if replicaOf != "" {
 		node.Role = "slave"
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
-		// Once the handshake is complete, the connection will be read only stream
 		node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
-		go node.SyncDBfromMaster(&db)
-		// handleConn(node.Reader, &db)
-		// for i := 0; i < 10; i++ {
-		// 	go handleConn(node.Reader, &db)
-		// }
 	}
 	if node.Role == "master" {
 		offset := 0

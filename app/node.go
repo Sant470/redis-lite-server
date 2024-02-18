@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"strconv"
-	"strings"
 )
 
 // node information
@@ -16,7 +14,6 @@ type Node struct {
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	Writer           net.Conn
-	Reader           net.Conn
 }
 
 func NewNode(role string) *Node {
@@ -64,31 +61,5 @@ func (replica *Node) HandShake(addr string) {
 	must(err)
 	_, err = conn.Read(barr)
 	must(err)
-	replica.Reader = conn
-}
-
-func (rep *Node) SyncDBfromMaster(db *dbstore) {
-	if rep.Reader == nil {
-		return
-	}
-	barr := make([]byte, 1024)
-	for {
-		size, err := rep.Reader.Read(barr)
-		if err != nil {
-			fmt.Println("error reading from master: ", err)
-		}
-		if err == io.EOF {
-			fmt.Println("error: ", err)
-			return
-		}
-		fmt.Println("barr: ", string(barr))
-		data := barr[:size]
-		inp := NewInput()
-		inp.parse(data)
-		cmd := strings.ToUpper(inp.cmds[0])
-		fmt.Println("cmds:", inp.cmds)
-		if cmd == "SET" {
-			db.database[inp.cmds[1]] = inp.cmds[2]
-		}
-	}
+	conn.Close()
 }

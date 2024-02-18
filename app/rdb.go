@@ -139,7 +139,6 @@ func parseRDB(db *dbstore, file *os.File) (*RDB, error) {
 				log.Println("error extracting key: ", err)
 			}
 			if ts > time.Now().Unix() {
-				fmt.Println("ts: ", ts)
 				// rdb.Database[dbIdx].Store[key] = &Item{Val: val, Expire: time.Unix(ts, 0)}
 				db.database[key] = val
 				expireChannel <- expireInfo{key: key, ttm: time.Duration(time.Duration(time.Unix(ts, 0).Sub(time.Unix(0, 0))).Milliseconds())}
@@ -155,7 +154,6 @@ func parseRDB(db *dbstore, file *os.File) (*RDB, error) {
 				log.Println("error extracting key: ", err)
 			}
 			if tms > time.Now().UnixMilli() {
-				fmt.Println("tms: ", tms)
 				db.database[key] = val
 				t := time.Unix(tms/1000, (tms%1000)*int64(time.Millisecond))
 				milliSeconds := t.Sub(time.Unix(0, 0)).Milliseconds()
