@@ -68,11 +68,13 @@ func (replica *Node) HandShake(addr string) {
 
 func (rep *Node) SyncDBfromMaster(db *dbstore) {
 	if rep.Reader == nil {
+		fmt.Println("got here:")
 		return
 	}
 	barr := make([]byte, 1024)
 	for {
 		size, err := rep.Reader.Read(barr)
+		fmt.Println("barr: ", barr)
 		if err != nil {
 			fmt.Println("error reading from master: ", err)
 		}
