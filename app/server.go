@@ -74,7 +74,8 @@ func handleConn(conn net.Conn, db *dbstore) {
 		cmd := strings.ToUpper(inp.cmds[0])
 		if cmd == "SET" {
 			rm.AppendBuffer(string(data))
-			go rm.sendDataToReplicas()
+			// This is to ensure that the write are propogated to the replicas
+			rm.sendDataToReplicas()
 		}
 		if cmd == "PSYNC" {
 			rm.AddReplica(Node{Writer: conn})
