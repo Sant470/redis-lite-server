@@ -37,7 +37,7 @@ func (node *Node) FieldVapMap() map[string]interface{} {
 
 func must(err error) {
 	if err != nil {
-		log.Fatalf("error reading from connection: %s", err)
+		log.Printf("error reading from connection: %s", err)
 	}
 }
 
