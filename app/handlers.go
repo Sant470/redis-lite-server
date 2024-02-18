@@ -125,6 +125,7 @@ func (i *input) handle(conn net.Conn, db *dbstore) {
 		sendSimpleString(conn, "OK")
 	case "GET":
 		val, OK := getKey(i.cmds[1], db)
+		fmt.Println("val: ", val)
 		if !OK {
 			sendEmptyResponse(conn)
 			break

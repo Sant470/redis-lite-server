@@ -76,6 +76,7 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 		if err != nil {
 			fmt.Println("error reading from master: ", err)
 		}
+		fmt.Println("barr: ", string(barr))
 		data := barr[:size]
 		inp := NewInput()
 		inp.parse(data)

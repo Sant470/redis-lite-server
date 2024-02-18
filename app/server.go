@@ -57,10 +57,6 @@ func handleConn(conn net.Conn, db *dbstore) {
 		}
 	}()
 	go expireKeys(db, expireChannel)
-	if node.Role == "slave" {
-		go node.SyncDBfromMaster(db)
-		// go node.SyncDBfromMaster(db)
-	}
 	barr := make([]byte, 1024)
 	for {
 		size, err := conn.Read(barr)
