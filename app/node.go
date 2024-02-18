@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -62,4 +63,15 @@ func (replica *Node) HandShake(addr string) net.Conn {
 	_, err = conn.Read(barr)
 	must(err)
 	return conn
+}
+
+func (rep *Node) SyncDBfromMaster(db *dbstore) {
+	barr := make([]byte, 1024)
+	for {
+		size, err := rep.Reader.Read(barr)
+		if err != nil {
+			fmt.Println("error reading from master: ", err)
+		}
+		data := barr[:size]
+	}
 }
