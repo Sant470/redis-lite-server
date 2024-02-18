@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -39,14 +38,14 @@ func (node *Node) FieldVapMap() map[string]interface{} {
 
 func must(err error) {
 	if err != nil {
-		log.Printf("error reading from connection: %s", err)
+		fmt.Printf("error reading from connection: %s", err)
 	}
 }
 
 func (replica *Node) HandShake(addr string) net.Conn {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Printf("error connecting to node: %s, error: %s", addr, err.Error())
+		fmt.Printf("error connecting to node: %s, error: %s", addr, err.Error())
 	}
 	barr := make([]byte, 1024)
 	conn.Write([]byte(encodeArray([]string{"ping"})))
