@@ -78,6 +78,7 @@ func (rep *Node) SyncDBfromMaster(db *dbstore) {
 			fmt.Println("error reading from master: ", err)
 		}
 		if err == io.EOF {
+			fmt.Println("error: ", err)
 			return
 		}
 		fmt.Println("barr: ", string(barr))
