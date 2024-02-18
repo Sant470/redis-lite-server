@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"strconv"
-	"strings"
 )
 
 // node information
@@ -16,6 +14,11 @@ type Node struct {
 	Host             *string `json:"host,omitempty"`
 	Port             *int    `json:"port,omitempty"`
 	Writer           net.Conn
+	Reader           net.Conn
+}
+
+func NewNode(role string) *Node {
+	return &Node{Role: role}
 }
 
 // TODO: implements using reflect
@@ -38,27 +41,25 @@ func must(err error) {
 	}
 }
 
-// TODO: implements retries in case of failure
-func (master *Node) HandShake(replica *Node) {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", *master.Host, *master.Port))
+func (replica *Node) HandShake(addr string) net.Conn {
+	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Printf("error connecting to node: %s, error: %s", master.Role, err.Error())
-		return
+		log.Fatalf("error connecting to node: %s, error: %s", addr, err.Error())
 	}
-	// defer conn.Close()
 	barr := make([]byte, 1024)
-	mustCopy(conn, strings.NewReader(encodeArray([]string{"ping"})))
+	conn.Write([]byte(encodeArray([]string{"ping"})))
 	_, err = conn.Read(barr)
 	must(err)
-	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "listening-port", strconv.Itoa(*replica.Port)})))
+	conn.Write([]byte(encodeArray([]string{"REPLCONF", "listening-port", strconv.Itoa(*replica.Port)})))
 	_, err = conn.Read(barr)
 	must(err)
-	mustCopy(conn, strings.NewReader(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
+	conn.Write([]byte(encodeArray([]string{"REPLCONF", "capa", "psync2"})))
 	_, err = conn.Read(barr)
 	must(err)
-	mustCopy(conn, strings.NewReader(encodeArray([]string{"PSYNC", "?", "-1"})))
+	conn.Write([]byte(encodeArray([]string{"PSYNC", "?", "-1"})))
 	_, err = conn.Read(barr)
 	must(err)
 	_, err = conn.Read(barr)
 	must(err)
+	return conn
 }

@@ -100,7 +100,7 @@ func extractKeyValue(r *bufio.Reader) (string, string, error) {
 	return key, val, nil
 }
 
-func parseRDB(file *os.File) (*RDB, error) {
+func parseRDB(db *dbstore, file *os.File) (*RDB, error) {
 	r := bufio.NewReader(file)
 	rdb := NewRDB()
 	_, err := r.Read(rdb.Magic[:])
@@ -116,7 +116,7 @@ func parseRDB(file *os.File) (*RDB, error) {
 		if err != nil {
 			return nil, err
 		}
-		var dbIdx uint8
+		// var dbIdx uint8
 		switch opcode {
 		case EOF:
 			return rdb, nil
@@ -139,7 +139,10 @@ func parseRDB(file *os.File) (*RDB, error) {
 				log.Println("error extracting key: ", err)
 			}
 			if ts > time.Now().Unix() {
-				rdb.Database[dbIdx].Store[key] = &Item{Val: val, Expire: time.Unix(ts, 0)}
+				fmt.Println("ts: ", ts)
+				// rdb.Database[dbIdx].Store[key] = &Item{Val: val, Expire: time.Unix(ts, 0)}
+				db.database[key] = val
+				expireChannel <- expireInfo{key: key, ttm: time.Duration(time.Duration(time.Unix(ts, 0).Sub(time.Unix(0, 0))).Milliseconds())}
 			}
 		case EXPIRETIMEMS:
 			expiry := make([]byte, 8)
@@ -152,14 +155,20 @@ func parseRDB(file *os.File) (*RDB, error) {
 				log.Println("error extracting key: ", err)
 			}
 			if tms > time.Now().UnixMilli() {
-				rdb.Database[dbIdx].Store[key] = &Item{Val: val, Expire: time.Unix(tms/1000, (tms%1000)*int64(time.Millisecond))}
+				fmt.Println("tms: ", tms)
+				db.database[key] = val
+				t := time.Unix(tms/1000, (tms%1000)*int64(time.Millisecond))
+				milliSeconds := t.Sub(time.Unix(0, 0)).Milliseconds()
+				expireChannel <- expireInfo{key: key, ttm: time.Duration(milliSeconds)}
+				// rdb.Database[dbIdx].Store[key] = &Item{Val: val, Expire: time.Unix(tms/1000, (tms%1000)*int64(time.Millisecond))}
 			}
 		default:
 			key, val, err := extractKeyValue(r)
 			if err != nil {
 				log.Println("error extracting key: ", err)
 			}
-			rdb.Database[dbIdx].Store[key] = &Item{Val: val}
+			db.database[key] = val
+			// rdb.Database[dbIdx].Store[key] = &Item{Val: val}
 		}
 	}
 }

@@ -26,7 +26,7 @@ func (rm *ReplicaManager) AppendBuffer(data string) {
 	rm.Mu.Unlock()
 }
 
-func (rm *ReplicaManager) populateReplicas() {
+func (rm *ReplicaManager) sendDataToReplicas() {
 	rm.Mu.Lock()
 	for _, node := range rm.Nodes {
 		for _, data := range rm.Buffer {
