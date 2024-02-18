@@ -62,6 +62,9 @@ func expireKeys(db *dbstore, in <-chan expireInfo) {
 }
 
 func handleConn(conn net.Conn, db *dbstore) {
+	if conn == nil {
+		return
+	}
 	alive := false
 	defer func() {
 		if !alive {
@@ -83,9 +86,12 @@ func handleConn(conn net.Conn, db *dbstore) {
 		inp := NewInput()
 		inp.parse(data)
 		cmd := strings.ToUpper(inp.cmds[0])
-		if cmd == "SET" {
+		if cmd == "SET" && node.Role == "master" {
 			rm.AppendBuffer(string(data))
 			rm.sendDataToReplicas()
+		}
+		if cmd == "SET" && node.Role == "slave" {
+			continue
 		}
 		if cmd == "PSYNC" {
 			alive = true
@@ -118,7 +124,7 @@ func main() {
 		masterPort, _ := strconv.Atoi(args[len(args)-1])
 		// Once the handshake is complete, the connection will be read only stream
 		go node.HandShake(fmt.Sprintf("%s:%d", replicaOf, masterPort))
-		go node.SyncDBfromMaster(&db)
+		go handleConn(node.Reader, &db)
 	}
 	if node.Role == "master" {
 		offset := 0
