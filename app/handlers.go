@@ -3,10 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"log"
-	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -18,33 +16,6 @@ type input struct {
 
 func NewInput() *input {
 	return &input{}
-}
-
-func sendSimpleString(conn net.Conn, resp string) {
-	conn.Write([]byte(encodeSimpleString(resp)))
-}
-
-func sendEmptyResponse(conn net.Conn) {
-	conn.Write([]byte(encodeEmptyString()))
-}
-
-func sendArrayResponse(conn net.Conn, resp []string) {
-	conn.Write([]byte(encodeArray(resp)))
-}
-
-func sendBulkString(conn net.Conn, resp string) {
-	conn.Write([]byte(encodeBulkString(resp)))
-}
-
-func psyncMessage(cmds ...string) string {
-	result := "FULLRESYNC"
-	if cmds[0] == "?" {
-		result += fmt.Sprintf(" %s", *node.MasterReplID)
-	}
-	if cmds[1] == "-1" {
-		result += fmt.Sprintf(" %d", *node.MasterReplOffset)
-	}
-	return result
 }
 
 func configDetail(key string) []string {
@@ -112,44 +83,37 @@ func (i *input) parse(raw []byte) {
 	i.cmds, _ = decodeArray(r)
 }
 
-func (i *input) handle(conn net.Conn, db *dbstore) {
+func (i *input) handle(db *dbstore) string {
 	cmd := strings.ToUpper(i.cmds[0])
-	fmt.Println("cmds from handler: ", i.cmds)
 	switch cmd {
 	case "PING":
-		sendSimpleString(conn, "PONG")
+		return encodeSimpleString("PONG")
 	case "ECHO":
-		sendSimpleString(conn, i.cmds[1])
+		return encodeSimpleString(i.cmds[1])
 	case "SET":
 		set(i.cmds[1:], db)
-		sendSimpleString(conn, "OK")
+		return encodeSimpleString("OK")
 	case "GET":
 		val, OK := getKey(i.cmds[1], db)
-		fmt.Println("val: ", val)
 		if !OK {
-			sendEmptyResponse(conn)
-			break
+			return encodeEmptyString()
 		}
-		sendSimpleString(conn, val)
+		return encodeSimpleString(val)
 	case "CONFIG":
 		if strings.ToUpper(i.cmds[1]) == "GET" {
 			resp := configDetail(i.cmds[2])
-			sendArrayResponse(conn, resp)
+			return encodeArray(resp)
 		}
 	case "KEYS":
 		keys := getKeys(db)
-		sendArrayResponse(conn, keys)
+		return encodeArray(keys)
 	case "INFO":
 		info := getInfoDetails(i.cmds[1:]...)
-		sendBulkString(conn, info)
+		return encodeBulkString(info)
 	case "REPLCONF":
-		sendSimpleString(conn, "OK")
-	case "PSYNC":
-		psyncResp := psyncMessage(i.cmds[1:]...)
-		sendSimpleString(conn, psyncResp)
-		content, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
-		conn.Write([]byte(fmt.Sprintf("%s%d%s%s", string(Bulk), len(content), CRLF, content)))
+		return encodeSimpleString("OK")
 	default:
-		sendSimpleString(conn, "OK")
+		return encodeSimpleString("OK")
 	}
+	return ""
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -38,6 +39,17 @@ var dbfilename string
 
 const EMPTY_RDB_HEX_STRING = "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2"
 
+func psyncMessage(cmds ...string) string {
+	result := "FULLRESYNC"
+	if cmds[0] == "?" {
+		result += fmt.Sprintf(" %s", *node.MasterReplID)
+	}
+	if cmds[1] == "-1" {
+		result += fmt.Sprintf(" %d", *node.MasterReplOffset)
+	}
+	return result
+}
+
 func expireKeys(db *dbstore, in <-chan expireInfo) {
 	for val := range in {
 		tick := time.NewTicker(val.ttm)
@@ -70,17 +82,23 @@ func handleConn(conn net.Conn, db *dbstore) {
 		data := barr[:size]
 		inp := NewInput()
 		inp.parse(data)
-		inp.handle(conn, db)
 		cmd := strings.ToUpper(inp.cmds[0])
 		if cmd == "SET" {
 			rm.AppendBuffer(string(data))
-			// This is to ensure that the write are propogated to the replicas
 			rm.sendDataToReplicas()
 		}
 		if cmd == "PSYNC" {
-			rm.AddReplica(Node{Writer: conn})
 			alive = true
+			rm.AddReplica(Node{Writer: conn})
+			psyncResp := psyncMessage(inp.cmds[1:]...)
+			conn.Write([]byte(encodeSimpleString(psyncResp)))
+			content, _ := hex.DecodeString(EMPTY_RDB_HEX_STRING)
+			conn.Write([]byte(fmt.Sprintf("%s%d%s%s", string(Bulk), len(content), CRLF, content)))
+		} else {
+			resp := inp.handle(db)
+			conn.Write([]byte(resp))
 		}
+
 	}
 }
 
