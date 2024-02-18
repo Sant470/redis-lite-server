@@ -44,7 +44,7 @@ func must(err error) {
 func (replica *Node) HandShake(addr string) net.Conn {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Fatalf("error connecting to node: %s, error: %s", addr, err.Error())
+		log.Printf("error connecting to node: %s, error: %s", addr, err.Error())
 	}
 	barr := make([]byte, 1024)
 	conn.Write([]byte(encodeArray([]string{"ping"})))
