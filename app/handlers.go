@@ -114,6 +114,7 @@ func (i *input) parse(raw []byte) {
 
 func (i *input) handle(conn net.Conn, db *dbstore) {
 	cmd := strings.ToUpper(i.cmds[0])
+	fmt.Println("cmds from handler: ", i.cmds)
 	switch cmd {
 	case "PING":
 		sendSimpleString(conn, "PONG")
